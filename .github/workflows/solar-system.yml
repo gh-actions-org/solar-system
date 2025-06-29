@@ -123,6 +123,7 @@ jobs:
             wget -q -o - 127.0.0.1:3000/live | grep live
         
         - name: Docker push
+          if: always()
           uses: docker/build-push-action@v6
           with:
             context: .
