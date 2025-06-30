@@ -109,7 +109,7 @@ jobs:
           push: true
           tags: |
             ${{ vars.DH_USERNAME }}/solar-system:${{ github.sha }}
-            ghcr.io/vallabha-devtools/solar-system:${{ github.sha }}
+            ghcr.io/Samarth DevTools/solar-system:${{ github.sha }}
  
   # Uncomment and customize if you want to add dev-deploy step later
   # dev-deploy:
