@@ -1,7 +1,8 @@
-name: unit testing for the solarsytem project
+name: unit testing for the solarsystem project
+
 on:  
   push:
- 
+
 env:
   MONGO_URI: 'mongodb+srv://supercluster.d83jj.mongodb.net/superData'
   MONGO_USERNAME: ${{ vars.MONGO_USERNAME }}
@@ -11,8 +12,8 @@ jobs:
   build:
     strategy:
       matrix:
-        node-version: [18,20]
-        os: [ubuntu-latest,windows-latest]
+        node-version: [18, 20]
+        os: [ubuntu-latest, windows-latest]
         exclude:
           - node-version: 18
             os: windows-latest
@@ -21,24 +22,24 @@ jobs:
             os: ubuntu-latest
     runs-on: ${{ matrix.os }}
     steps:
-      - name: checkout the repository
+      - name: Checkout the repository
         uses: actions/checkout@v4.2.2
        
-      - name: Setup the nodeJS
+      - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: ${{ matrix.node-version }}
  
-      - name: cache NPM dependencies
+      - name: Cache NPM dependencies
         uses: actions/cache@v3
         with:
-          path: node_modules
-          key: ${{ runner.os }}-node_modules-${{ hashfiles('package-lock.json') }}
+          path: ~/.npm
+          key: ${{ runner.os }}-npm-cache-${{ hashFiles('package-lock.json') }}
  
-      - name: install dependencies
+      - name: Install dependencies
         run: npm install
        
-      - name: Testing the file
+      - name: Run Unit Tests
         run: npm test
  
   code-coverage:
@@ -46,11 +47,17 @@ jobs:
       image: node:18
     runs-on: ubuntu-latest
     steps:
-      - name: run the code-coverage
+      - name: Checkout the repository
+        uses: actions/checkout@v4
+ 
+      - name: Install dependencies
+        run: npm install
+
+      - name: Run Code Coverage
         continue-on-error: true
         run: npm run coverage
  
-      - name: Archive the Test results
+      - name: Archive the Test Results
         if: always()
         uses: actions/upload-artifact@v4
         with:
@@ -63,7 +70,7 @@ jobs:
       packages: write
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout Repository
+      - name: Checkout the repository
         uses: actions/checkout@v4
  
       - name: Login to Docker Hub
@@ -76,7 +83,7 @@ jobs:
         uses: docker/login-action@v3
         with:
           registry: ghcr.io
-          username: ${{ github.repository_owner }}
+          username: Samarth-DevTools
           password: ${{ secrets.GITHUB_TOKEN }}
  
       - name: Build image (no push)
@@ -86,20 +93,20 @@ jobs:
           push: false
           tags: ${{ vars.DH_USERNAME }}/solar-system:${{ github.sha }}
  
-      - name: Testing Docker Img
+      - name: Test Docker Image
         run: |
-          docker images
           docker run --name solar-system-app -d \
             -p 3000:3000 \
-            -e MONGO_URI=$MONGO_URI \
-            -e MONGO_USERNAME=$MONGO_USERNAME \
-            -e MONGO_PASSWORD=$MONGO_PASSWORD \
+            -e MONGO_URI=${{ env.MONGO_URI }} \
+            -e MONGO_USERNAME=${{ env.MONGO_USERNAME }} \
+            -e MONGO_PASSWORD=${{ env.MONGO_PASSWORD }} \
             ${{ vars.DH_USERNAME }}/solar-system:${{ github.sha }}
-          export IP=$(docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' solar-system-app)
-          echo "Container IP: $IP"
- 
-          echo "Testing Image using wget"
-          wget -q -O - 127.0.0.1:3000/live | grep live
+          
+          echo "Waiting for container to start..."
+          sleep 5
+
+          echo "Testing Image using curl"
+          curl -s -o /dev/null -w "%{http_code}" http://localhost:3000/live | grep 200
      
       - name: Push images to registries
         if: always()
@@ -109,17 +116,17 @@ jobs:
           push: true
           tags: |
             ${{ vars.DH_USERNAME }}/solar-system:${{ github.sha }}
-            ghcr.io/Samarth DevTools/solar-system:${{ github.sha }}
+            ghcr.io/Samarth-DevTools/solar-system:${{ github.sha }}
  
-  # Uncomment and customize if you want to add dev-deploy step later
-  # dev-deploy:
-  #   needs: [build, code-coverage]
-  #   runs-on: ubuntu-latest
-  #   steps:
-  #     - name: checkout the repository
-  #       uses: actions/checkout@v4.2.2
-  #    
-  #     - name: kubectl install
-  #       uses: azure/setup-kubectl@v3
-  #       with:
-  #         version: 'v1.26.0'  
+# Optional dev-deploy step (uncomment when ready)
+# dev-deploy:
+#   needs: [build, code-coverage]
+#   runs-on: ubuntu-latest
+#   steps:
+#     - name: Checkout the repository
+#       uses: actions/checkout@v4.2.2
+#    
+#     - name: Install kubectl
+#       uses: azure/setup-kubectl@v3
+#       with:
+#         version: 'v1.26.0'
