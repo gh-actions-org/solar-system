@@ -1,127 +1,144 @@
-name: unit testing for the solarsystem project
+name: Solar System Workflow
 
-on:  
+on: 
+  workflow_dispatch:
   push:
+    branches:
+      - main
+      - 'feature/*'
 
 env:
-  MONGO_URI: 'mongodb+srv://supercluster.d83jj.mongodb.net/superData'
+  MONGO_URI: mongodb+srv://supercluster.d83jj.mongodb.net/superData
   MONGO_USERNAME: ${{ vars.MONGO_USERNAME }}
   MONGO_PASSWORD: ${{ secrets.MONGO_PASSWORD }}
- 
-jobs:  
-  build:
-    strategy:
-      matrix:
-        node-version: [18, 20]
-        os: [ubuntu-latest, windows-latest]
-        exclude:
-          - node-version: 18
-            os: windows-latest
-        include:
-          - node-version: 19
-            os: ubuntu-latest
-    runs-on: ${{ matrix.os }}
-    steps:
-      - name: Checkout the repository
-        uses: actions/checkout@v4.2.2
-       
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
+    
+jobs:
+    unit-testing:
+      name: Unit Testing
+      strategy:
+          matrix:
+            nodejs-version: [18,19]
+            os: [ubuntu-latest, windows-latest]
+            exclude:
+              - nodejs-version: 19
+                os: windows-latest
+      runs-on: ${{ matrix.os }}
+      steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Setup NodeJS Version ${{ matrix.nodejs-version }}
+        uses: actions/setup-node@v3
         with:
-          node-version: ${{ matrix.node-version }}
- 
-      - name: Cache NPM dependencies
-        uses: actions/cache@v3
+          node-version: ${{ matrix.nodejs-version }}
+    
+      - name: Caching dependencies
+        uses: actions/cache@v4
         with:
-          path: ~/.npm
-          key: ${{ runner.os }}-npm-cache-${{ hashFiles('package-lock.json') }}
- 
-      - name: Install dependencies
+          path: node_modules
+          key: ${{ runner.os }}-node-modules-${{ hashFiles('package-lock.json') }}
+
+      - name: Install Dependencies
         run: npm install
-       
-      - name: Run Unit Tests
+    
+      - name: Unit Testing
+        id: unit-testing-step
         run: npm test
 
       - name: Archive Test Results
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: unit-test-results
+          name: Test-Results
           path: Test-Results.xml
-       
-  code-coverage:
-    container:
-      image: node:18
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout the repository
-        uses: actions/checkout@v4
- 
-      - name: Install dependencies
-        run: npm install
+          
 
-      - name: Run Code Coverage
+
+    code-coverage:
+      name: CodeCoverage
+      runs-on: ubuntu-latest
+      steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Setup NodeJS Version 
+        uses: actions/setup-node@v3
+        with:
+          node-version: 18
+
+      - name: Caching dependencies
+        uses: actions/cache@v4
+        with:
+          path: node_modules
+          key: ${{ runner.os }}-node-modules-${{ hashFiles('package-lock.json') }}
+    
+      - name: Install Dependencies
+        run: npm install
+    
+      - name: code coverage
         continue-on-error: true
         run: npm run coverage
- 
-      - name: Archive the Test Results
-        if: always()
+
+      - name: Archive Test results
         uses: actions/upload-artifact@v4
         with:
-          name: coverage-results
-          path: Test-Results.xml
- 
-  docker:
-    name: containerization
-    permissions:
-      packages: write
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout the repository
-        uses: actions/checkout@v4
- 
-      - name: Login to Docker Hub
-        uses: docker/login-action@v3
-        with:
-          username: ${{ vars.DH_USERNAME }}
-          password: ${{ secrets.DH_PASSWORD }}
- 
-      - name: Login to GH Container Registry
-        uses: docker/login-action@v3
-        with:
-          registry: ghcr.io
-          username: Samarth-DevTools
-          password: ${{ secrets.GITHUB_TOKEN }}
- 
-      - name: Build image (no push)
-        uses: docker/build-push-action@v6
-        with:
-          context: .
-          push: false
-          tags: ${{ vars.DH_USERNAME }}/solar-system:${{ github.sha }}
- 
-      - name: Test Docker Image
-        run: |
-          docker run --name solar-system-app -d \
-            -p 3000:3000 \
-            -e MONGO_URI=${{ env.MONGO_URI }} \
-            -e MONGO_USERNAME=${{ env.MONGO_USERNAME }} \
-            -e MONGO_PASSWORD=${{ env.MONGO_PASSWORD }} \
-            ${{ vars.DH_USERNAME }}/solar-system:${{ github.sha }}
+          name: code-cvrge-rslt
+          path: coverage
+          retention-days: 5
+    
           
-          echo "Waiting for container to start..."
-          sleep 5
+    docker:
+      name: containerization
+      needs: [unit-testing ,code-coverage]
+      permissions:
+        packages: write
+      runs-on: ubuntu-latest
+      steps:
+        - name: Checkout Repository
+          uses: actions/checkout@v4
 
-          echo "Testing Image using curl"
-          curl -s -o /dev/null -w "%{http_code}" http://localhost:3000/live | grep 200
-     
-      - name: Push images to registries
-        if: always()
-        uses: docker/build-push-action@v6
-        with:
-          context: .
-          push: true
-          tags: |
-            ${{ vars.DH_USERNAME }}/solar-system:${{ github.sha }}
-            ghcr.io/${{ github.repository_owner }}/solar-system:${{ github.sha }}
- 
+        - name: Login to Docker Hub
+          uses: docker/login-action@v3
+          with:
+            username: ${{ vars.DH_USERNAME }}
+            password: ${{ secrets.DH_PASSWORD }}
+
+        - name: Login to GH Container Registry
+          uses: docker/login-action@v3
+          with:
+            registry: ghcr.io
+            username: ${{ github.repository_owner }}
+            password: ${{ secrets.GITHUB_TOKEN }}
+
+        - name: Build and push
+          uses: docker/build-push-action@v6
+          with:
+            context: .
+            push: false
+            tags: ${{ vars.DH_USERNAME }}/solar-system:${{ github.sha }}
+
+        - name: Test Docker Image
+          run: |
+            docker run --name solar-system-app -d \
+              -p 3000:3000 \
+              -e MONGO_URI=${{ env.MONGO_URI }} \
+              -e MONGO_USERNAME=${{ env.MONGO_USERNAME }} \
+              -e MONGO_PASSWORD=${{ env.MONGO_PASSWORD }} \
+              ${{ vars.DH_USERNAME }}/solar-system:${{ github.sha }}
+          
+            echo "Waiting for container to start..."
+            sleep 5
+
+            echo "Testing Image using curl"
+            curl -s -o /dev/null -w "%{http_code}" http://localhost:3000/live | grep 200
+
+        
+        - name: pushing to container registry
+          if: always()
+          uses: docker/build-push-action@v6
+          with:
+            context: .
+            push: true
+            tags: | 
+              ${{ vars.DH_USERNAME }}/solar-system:${{ github.sha }}
+              ghcr.io/${{ github.repository_owner }}/solar-system/${{ github.sha }}
