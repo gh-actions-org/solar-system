@@ -18,7 +18,7 @@ jobs:
           - node-version: 18
             os: windows-latest
         include:
-          - node-version: 18
+          - node-version: 19
             os: ubuntu-latest
     runs-on: ${{ matrix.os }}
     steps:
@@ -41,7 +41,14 @@ jobs:
        
       - name: Run Unit Tests
         run: npm test
- 
+
+      - name: Archive Test Results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: unit-test-results
+          path: Test-Results.xml
+       
   code-coverage:
     container:
       image: node:18
@@ -61,7 +68,7 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: Test-Results
+          name: coverage-results
           path: Test-Results.xml
  
   docker:
@@ -118,15 +125,3 @@ jobs:
             ${{ vars.DH_USERNAME }}/solar-system:${{ github.sha }}
             ghcr.io/${{ github.repository_owner }}/solar-system:${{ github.sha }}
  
-# Optional dev-deploy step (uncomment when ready)
-# dev-deploy:
-#   needs: [build, code-coverage]
-#   runs-on: ubuntu-latest
-#   steps:
-#     - name: Checkout the repository
-#       uses: actions/checkout@v4.2.2
-#    
-#     - name: Install kubectl
-#       uses: azure/setup-kubectl@v3
-#       with:
-#         version: 'v1.26.0'
