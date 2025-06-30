@@ -56,7 +56,7 @@ jobs:
         if: always()
         uses: actions/download-artifact@v4
         with:
-          name: Test-Results
+          path: Test-Results.xml
           
 
 
