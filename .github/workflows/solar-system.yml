@@ -130,7 +130,8 @@ jobs:
             echo $IP
 
             echo Testing Image using wget
-            wget -q -o - http://localhost:3000/live | grep live
+            sleep 5
+            wget -q -o - 172.17.0.2:3000/live | grep live
         
         - name: pushing to container registry
           if: always()
