@@ -121,7 +121,6 @@ jobs:
             tags: ${{ vars.DH_USERNAME }}/solar-system:${{ github.sha }}
 
         - name: Testing Docker Image
-          continue-on-error: false
           run: |
             docker run --name solar-system-app -d \
             -p 3000:3000 \
@@ -158,9 +157,9 @@ jobs:
             version: 'v1.26.0'
           id: install
 
-        - name: Fetch Kubernetes Cluster
-          run: |
-            kubectl version --short
-            echo *******
-            kubectl get nodes
+        # - name: Fetch Kubernetes Cluster
+        #   run: |
+        #     kubectl version --short
+        #     echo *******
+        #     kubectl get nodes
 
