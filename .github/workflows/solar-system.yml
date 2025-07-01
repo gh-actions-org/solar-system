@@ -57,110 +57,110 @@ jobs:
           
 
 
-    code-coverage:
-      name: CodeCoverage
-      runs-on: ubuntu-latest
-      steps:
-      - name: Checkout Repository
-        uses: actions/checkout@v4
+    # code-coverage:
+    #   name: CodeCoverage
+    #   runs-on: ubuntu-latest
+    #   steps:
+    #   - name: Checkout Repository
+    #     uses: actions/checkout@v4
 
-      - name: Setup NodeJS Version 
-        uses: actions/setup-node@v3
-        with:
-          node-version: 18
+    #   - name: Setup NodeJS Version 
+    #     uses: actions/setup-node@v3
+    #     with:
+    #       node-version: 18
 
-      - name: Caching dependencies
-        uses: actions/cache@v4
-        with:
-          path: node_modules
-          key: ${{ runner.os }}-node-modules-${{ hashFiles('package-lock.json') }}
+    #   - name: Caching dependencies
+    #     uses: actions/cache@v4
+    #     with:
+    #       path: node_modules
+    #       key: ${{ runner.os }}-node-modules-${{ hashFiles('package-lock.json') }}
     
-      - name: Install Dependencies
-        run: npm install
+    #   - name: Install Dependencies
+    #     run: npm install
     
-      - name: code coverage
-        continue-on-error: true
-        run: npm run coverage
+    #   - name: code coverage
+    #     continue-on-error: true
+    #     run: npm run coverage
 
-      - name: Archive Test results
-        uses: actions/upload-artifact@v4
-        with:
-          name: code-cvrge-rslt
-          path: coverage
-          retention-days: 5
+    #   - name: Archive Test results
+    #     uses: actions/upload-artifact@v4
+    #     with:
+    #       name: code-cvrge-rslt
+    #       path: coverage
+    #       retention-days: 5
     
           
-    docker:
-      name: containerization
-      needs: [unit-testing ,code-coverage]
-      permissions:
-        packages: write
-      runs-on: ubuntu-latest
-      steps:
-        - name: Checkout Repository
-          uses: actions/checkout@v4
+    # docker:
+    #   name: containerization
+    #   needs: [unit-testing ,code-coverage]
+    #   permissions:
+    #     packages: write
+    #   runs-on: ubuntu-latest
+    #   steps:
+    #     - name: Checkout Repository
+    #       uses: actions/checkout@v4
 
-        - name: Login to Docker Hub
-          uses: docker/login-action@v3
-          with:
-            username: ${{ vars.DH_USERNAME }}
-            password: ${{ secrets.DH_PASSWORD }}
+    #     - name: Login to Docker Hub
+    #       uses: docker/login-action@v3
+    #       with:
+    #         username: ${{ vars.DH_USERNAME }}
+    #         password: ${{ secrets.DH_PASSWORD }}
 
-        - name: Login to GH Container Registry
-          uses: docker/login-action@v3
-          with:
-            registry: ghcr.io
-            username: ${{ github.repository_owner }}
-            password: ${{ secrets.GITHUB_TOKEN }}
+    #     - name: Login to GH Container Registry
+    #       uses: docker/login-action@v3
+    #       with:
+    #         registry: ghcr.io
+    #         username: ${{ github.repository_owner }}
+    #         password: ${{ secrets.GITHUB_TOKEN }}
 
-        - name: Build and push
-          uses: docker/build-push-action@v6
-          with:
-            context: .
-            push: false
-            tags: ${{ vars.DH_USERNAME }}/solar-system:${{ github.sha }}
+    #     - name: Build and push
+    #       uses: docker/build-push-action@v6
+    #       with:
+    #         context: .
+    #         push: false
+    #         tags: ${{ vars.DH_USERNAME }}/solar-system:${{ github.sha }}
 
-        - name: Test Docker Image
-          run: |
-            docker run --name solar-system-app -d \
-              -p 3000:3000 \
-              -e MONGO_URI=${{ env.MONGO_URI }} \
-              -e MONGO_USERNAME=${{ env.MONGO_USERNAME }} \
-              -e MONGO_PASSWORD=${{ env.MONGO_PASSWORD }} \
-              ${{ vars.DH_USERNAME }}/solar-system:${{ github.sha }}
+    #     - name: Test Docker Image
+    #       run: |
+    #         docker run --name solar-system-app -d \
+    #           -p 3000:3000 \
+    #           -e MONGO_URI=${{ env.MONGO_URI }} \
+    #           -e MONGO_USERNAME=${{ env.MONGO_USERNAME }} \
+    #           -e MONGO_PASSWORD=${{ env.MONGO_PASSWORD }} \
+    #           ${{ vars.DH_USERNAME }}/solar-system:${{ github.sha }}
           
-            echo "Waiting for container to start..."
-            sleep 5
+    #         echo "Waiting for container to start..."
+    #         sleep 5
 
-            echo "Testing Image using curl"
-            curl -s -o /dev/null -w "%{http_code}" http://localhost:3000/live | grep 200
+    #         echo "Testing Image using curl"
+    #         curl -s -o /dev/null -w "%{http_code}" http://localhost:3000/live | grep 200
 
         
-        - name: pushing to container registry
-          if: always()
-          uses: docker/build-push-action@v6
-          with:
-            context: .
-            push: true
-            tags: | 
-              ${{ vars.DH_USERNAME }}/solar-system:${{ github.sha }}
-              ghcr.io/${{ github.repository_owner }}/solar-system/${{ github.sha }}
+    #     - name: pushing to container registry
+    #       if: always()
+    #       uses: docker/build-push-action@v6
+    #       with:
+    #         context: .
+    #         push: true
+    #         tags: | 
+    #           ${{ vars.DH_USERNAME }}/solar-system:${{ github.sha }}
+    #           ghcr.io/${{ github.repository_owner }}/solar-system/${{ github.sha }}
 
-    dev-deploy:
-      needs: [docker]
-      runs-on: ubuntu-latest
-      steps:
-        - name: Checkout Repository
-          uses: actions/checkout@v4
+    # dev-deploy:
+    #   needs: [docker]
+    #   runs-on: ubuntu-latest
+    #   steps:
+    #     - name: Checkout Repository
+    #       uses: actions/checkout@v4
 
-        - uses: azure/setup-kubectl@v4
-          with:
-            version: 'v1.26.0'
-          id: install
+    #     - uses: azure/setup-kubectl@v4
+    #       with:
+    #         version: 'v1.26.0'
+    #       id: install
 
-        - name: Fetch Kubernetes Cluster
-          run: |
-            kubectl version --short
-            echo *******
-            kubectl get nodes
+    #     - name: Fetch Kubernetes Cluster
+    #       run: |
+    #         kubectl version --short
+    #         echo *******
+    #         kubectl get nodes
 
