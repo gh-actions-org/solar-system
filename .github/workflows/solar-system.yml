@@ -22,8 +22,8 @@ jobs:
             exclude:
               - nodejs-version: 19
                 os: windows-latest
-              - os: ubuntu-latest
-                node-js-version: 19
+              - node-js-version: 19
+                os: ubuntu-latest
 
       runs-on: ${{ matrix.os }}
       steps:
