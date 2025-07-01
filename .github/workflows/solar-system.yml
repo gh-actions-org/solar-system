@@ -127,7 +127,7 @@ jobs:
               -e MONGO_URI=${{ env.MONGO_URI }} \
               -e MONGO_USERNAME=${{ env.MONGO_USERNAME }} \
               -e MONGO_PASSWORD=${{ env.MONGO_PASSWORD }} \
-              ${{ vars.DH_USERNAME }}/solar-system:${{ github.sha }}
+              ${{ vars.DH_USERNAME }}/solar-system-test:${{ github.sha }}
           
             echo "Waiting for container to start..."
 
