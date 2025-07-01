@@ -56,38 +56,37 @@ jobs:
           path: test-results.xml
           
 
+    code-coverage:
+      name: CodeCoverage
+      runs-on: ubuntu-latest
+      steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
 
-    # code-coverage:
-    #   name: CodeCoverage
-    #   runs-on: ubuntu-latest
-    #   steps:
-    #   - name: Checkout Repository
-    #     uses: actions/checkout@v4
+      - name: Setup NodeJS Version
+        uses: actions/setup-node@v3
+        with:
+          node-version: 18
+      
+      - name: Install Dependencies
+        run: npm install
 
-    #   - name: Setup NodeJS Version 
-    #     uses: actions/setup-node@v3
-    #     with:
-    #       node-version: 18
+      - name: Caching dependencies
+        uses: actions/cache@v4
+        with:
+          path: node_modules
+          key: ${{ runner.os }}-node-modules-${{ hashFiles('package-lock.json') }}
+  
+      - name: Test code coverage
+        continue-on-error: true
+        run: npm run coverage
 
-    #   - name: Caching dependencies
-    #     uses: actions/cache@v4
-    #     with:
-    #       path: node_modules
-    #       key: ${{ runner.os }}-node-modules-${{ hashFiles('package-lock.json') }}
-    
-    #   - name: Install Dependencies
-    #     run: npm install
-    
-    #   - name: code coverage
-    #     continue-on-error: true
-    #     run: npm run coverage
-
-    #   - name: Archive Test results
-    #     uses: actions/upload-artifact@v4
-    #     with:
-    #       name: code-cvrge-rslt
-    #       path: coverage
-    #       retention-days: 5
+      - name: Archive Test results
+        uses: actions/upload-artifact@v4
+        with:
+          name: code-coverage-rslt
+          path: coverage
+          retention-days: 3
     
           
     # docker:
