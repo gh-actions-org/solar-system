@@ -22,6 +22,9 @@ jobs:
             exclude:
               - nodejs-version: 19
                 os: windows-latest
+              - os: ubuntu-latest
+                node-js-version: 19
+
       runs-on: ${{ matrix.os }}
       steps:
       - name: Checkout Repository
@@ -50,7 +53,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: Test-Results
-          path: Test-Results.xml
+          path: test-results.xml
           
 
 
