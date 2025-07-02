@@ -9,9 +9,7 @@ inputs:
 runs:
   using: "composite"
   steps:
-    - name: Comment on PR
-      uses: peter-evans/create-or-update-comment@v4
-      with:
-        token: ${{ secrets.GITHUB_TOKEN }}
-        issue-number: ${{ github.event.pull_request.number }}
-        body: ${{ inputs.message }}
+    - name: Comment PR
+        uses: thollander/actions-comment-pull-request@v3
+        with:
+          message: ${{ inputs.message }}

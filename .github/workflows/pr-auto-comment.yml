@@ -1,17 +1,16 @@
 name: PR Auto Comment Workflow
 
-on:
-  pull_request:
-    types: [opened]
+on: pull_request
 
 jobs:
-  comment-job:
+  example_comment_pr:
     runs-on: ubuntu-latest
+    name: An example job to comment a PR
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
+      - name: Checkout repo
+        uses: actions/checkout@v3
 
-      - name: Run PR Commenter Action
+      - name: Comment on PR
         uses: ./.github/custom-actions/pr-comment
         with:
-          message: "Thanks for the Pull Request! The team will review it shortly."
+          message: simple comment.

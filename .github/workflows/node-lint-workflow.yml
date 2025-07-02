@@ -1,9 +1,10 @@
 name: Node.js Lint Workflow
 
 on:
-  push:
-    branches:
-      - main
+  workflow_dispatch: 
+  # push:
+  #   branches:
+  #     - main
 
 jobs:
   lint-job:
