@@ -1,6 +1,9 @@
 name: PR Auto Comment Workflow
 
-on: pull_request
+on: 
+    
+    pull_request: 
+        types: [reopened, opened]
 
 jobs:
   example_comment_pr:
