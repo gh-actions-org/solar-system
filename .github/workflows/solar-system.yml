@@ -2,10 +2,10 @@ name: Solar System Workflow
 
 on: 
   workflow_dispatch:
-  push:
-    branches:
-      - main
-      - 'feature/*'
+  # push:
+  #   branches:
+  #     - main
+  #     - 'feature/*'
 
 env:
   MONGO_URI: 'mongodb+srv://supercluster.d83jj.mongodb.net/superData'
@@ -15,15 +15,15 @@ env:
 jobs:
     unit-testing:
       name: Unit Testing
-      services:
-        mongo-db:
-          image: siddharth67/mongo-db:non-prod
-          ports:
-            - 27017:27017
-      env:
-        MONGO_URI: 'mongodb://localhost:27017/superData'
-        MONGO_USERNAME: non-prod-user
-        MONGO_PASSWORD: non-prod-password
+      # services:
+      #   mongo-db:
+      #     image: siddharth67/mongo-db:non-prod
+      #     ports:
+      #       - 27017:27017
+      # env:
+      #   MONGO_URI: 'mongodb://localhost:27017/superData'
+      #   MONGO_USERNAME: non-prod-user
+      #   MONGO_PASSWORD: non-prod-password
 
       strategy:
           matrix:
@@ -69,17 +69,17 @@ jobs:
 
     code-coverage:
       name: CodeCoverage
-      container:
-        image: node:18
-      services:
-        mongo-db:
-          image: siddharth67/mongo-db:non-prod
-          options: 
-            --name mongo
-      env:
-        MONGO_URI: 'mongodb://mongo:27017/superData'
-        MONGO_USERNAME: non-prod-user
-        MONGO_PASSWORD: non-prod-password 
+      # container:
+      #   image: node:18
+      # services:
+      #   mongo-db:
+      #     image: siddharth67/mongo-db:non-prod
+      #     options: 
+      #       --name mongo
+      # env:
+      #   MONGO_URI: 'mongodb://mongo:27017/superData'
+      #   MONGO_USERNAME: non-prod-user
+      #   MONGO_PASSWORD: non-prod-password 
 
       runs-on: ubuntu-latest
       steps:
@@ -115,6 +115,7 @@ jobs:
     docker:
       name: containerization
       needs: [unit-testing ,code-coverage]
+    
       permissions:
         packages: write
       runs-on: ubuntu-latest
@@ -129,6 +130,7 @@ jobs:
             password: ${{ secrets.DH_PASSWORD }}
 
         - name: authenticate to GH Container Registry
+      
           uses: docker/login-action@v3
           with:
             registry: ghcr.io
