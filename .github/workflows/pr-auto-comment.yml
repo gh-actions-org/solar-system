@@ -1,0 +1,17 @@
+name: PR Auto Comment Workflow
+
+on:
+  pull_request:
+    types: [opened]
+
+jobs:
+  comment-job:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Run PR Commenter Action
+        uses: ./.github/actions/pr-comment
+        with:
+          message: "Thanks for the PR! team will review it shortly."
