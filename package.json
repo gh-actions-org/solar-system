@@ -21,8 +21,9 @@
     "nyc": "^15.1.0"
   },
   "devDependencies": {
-    "chai": "*",
-    "chai-http": "*",
-    "mocha": "*"
+    "chai": "^5.2.0",
+    "chai-http": "^5.1.2",
+    "eslint": "^9.30.1",
+    "mocha": "^11.7.1"
   }
 }
