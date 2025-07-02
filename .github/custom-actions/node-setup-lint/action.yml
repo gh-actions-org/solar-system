@@ -17,6 +17,7 @@ runs:
     
     - name: Run linter
       run: npx eslint .
+      shell: bash
 
 
     - name: Install dependencies
