@@ -12,6 +12,6 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Run PR Commenter Action
-        uses: ./.github/actions/pr-comment
+        uses: ./.github/custom-actions/pr-comment
         with:
-          message: "Thanks for the PR! team will review it shortly."
+          message: "Thanks for the Pull Request! The team will review it shortly."
